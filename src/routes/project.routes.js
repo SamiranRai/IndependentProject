@@ -5,6 +5,6 @@ const projectController = require('../controllers/project.controller');
 const authController = require('../controllers/auth.controller');
 
 router.post('/', authController.protect, projectController.createProject);
-router.post('/:projectId/finish-onboarding', authController.protect, projectController.finishOnboarding);
+router.post('/:projectId/finish-onboarding', authController.protect, projectController.addDestinationEmail);
 
 module.exports = router;

@@ -15,24 +15,24 @@ exports.createProject = catchAsync(async (req, res, next) => {
     code: "PROJECT_CREATED",
     data: {
       project,
-      relayEmail
-    }
+      relayEmail,
+    },
   });
 });
 
-exports.finishOnboarding = catchAsync(async (req, res, next) => {
-  const { projectId } = req.params;
+exports.addDestinationEmail = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
-  const { destinationEmail } = req.body;
-
-  await projectService.finishOnboardingService({
-    destinationEmail,
-    userId,
-    projectId,
-  });
+  const projectId = req.params.projectId;
+  const { relayEmail, onboardingCompleted } =
+    await projectService.addDestinationEmailService(req.body, userId, projectId);
 
   res.status(200).json({
-    status: "success",
+    success: true,
+    code: "SETUP_COMPLETED",
     message: "Onboarding successfully completed..",
+    data: {
+      relayEmail,
+      onboardingCompleted
+    }
   });
 });

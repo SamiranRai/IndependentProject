@@ -31,7 +31,7 @@ app.use("/api", limitter);
 app.use(express.json({ limit: "10kb" }));
 
 // DATA SANITIZATION AGAINS NOSQL QUERY INJECTION
-app.use(mongoSanitize());
+// app.use(mongoSanitize());
 
 // DATA SANITIZATION AGAINS XSS INJECTION
 
