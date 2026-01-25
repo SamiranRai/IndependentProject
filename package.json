@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon ./src/server",
-    "debug": "nodemon --inspect ./src/server"
+    "debug": "nodemon --inspect ./src/server",
+    "global-network-start": "ngrok http 3000"
   },
   "repository": {
     "type": "git",

@@ -26,8 +26,10 @@ const limitter = rateLimit({
   message:
     "Too many request from same Ip, please wait for an hour and try again!",
 });
-app.use("/api", limitter);
+// app.use("/api", limitter);
 
+app.set("trust proxy", true)
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: "10kb" }));
 
 // DATA SANITIZATION AGAINS NOSQL QUERY INJECTION

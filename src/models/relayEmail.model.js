@@ -31,7 +31,7 @@ const relayEmailSchema = new mongoose.Schema(
     domain: {
       type: String,
       required: true,
-      default: "relay.myapp.com",
+      default: "in.samiran.studio",
     },
 
     // Where legit emails go

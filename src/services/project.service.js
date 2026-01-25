@@ -17,11 +17,11 @@ exports.createProjectService = async (body, userId) => {
   });
 
   // GENERATE THE RELAY EMAIL
-  const domain = "relay.myapp.com";
+  const domain = "in.samiran.studio";
   let relayEmail = null;
   let attempts = 0;
 
-  while (!relayEmail && attempts < 5) {
+  while (!relayEmail && attempts < 10) {
     try {
       // generate the relay email
       const localPart = generateRelayLocalPart(name);
@@ -134,12 +134,13 @@ exports.addDestinationEmailService = async (body, userId, projectId) => {
 
 
 const generateRelayLocalPart = (projectName) => {
-  const slug = projectName
+  const base = projectName
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replace(/[^a-z0-9]+/g, "");
 
-  const token = crypto.randomBytes(3).toString("hex");
-  return `${slug}-${token}`;
+    if (!base) throw new AppError("Invalid project name for relay email")
+
+  const randomNumber = Math.floor(Math.random() * 1000); // 0-999 
+  return `${base}${randomNumber}`;
 };
