@@ -30,7 +30,11 @@ const limitter = rateLimit({
 
 app.set("trust proxy", true)
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json({ limit: "10kb" }));
+app.use(express.json({ 
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString("utf8");
+  }
+ }));
 
 // DATA SANITIZATION AGAINS NOSQL QUERY INJECTION
 // app.use(mongoSanitize());

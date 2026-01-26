@@ -1,3 +1,4 @@
+const IntegrationModel = require("../models/integration.model");
 const MessageModel = require("../models/message.model");
 const RelayEmailModel = require("../models/relayEmail.model");
 
@@ -58,11 +59,50 @@ exports.processInboundEmailService = async (payload) => {
   }
 };
 
-// exports.processInboundWebhookService = async (payload) => {
-//   if (!payload) return;
-// };
+exports.processInboundWebhookService = async ({ provider, payload, token }) => {
+  try {
+    if (!provider || !payload) return;
 
-// CREATE AND SAVE INGESTED MESSAGE TO DB
+    // 1) RESOLVING INTEGRATION
+    let integration;
+
+    // CHECK PROVIDER AND RESOLVE INTEGRATION
+    if (provider === "webflow") {
+      const siteId = payload.siteId;
+      if (!siteId) return;
+      integration = await IntegrationModel.findOne({
+        provider: "webflow",
+        externalId: siteId,
+        status: "active",
+      });
+    }
+
+    // CHECK PROVIDER AND RESOLVE INTEGRATION
+    if (provider === "framer") {
+      if (!token) return;
+      integration = await IntegrationModel.findOne({
+        provider: "framer",
+        integrationToken: token,
+        status: "active",
+      });
+    }
+
+    if (!integration) return;
+
+    // 2) NORMALIZE PAYLOAD
+
+    // -- THE FORM DATA IS DYNAMIC, WE DON'T KNOW HOW MANY AND WHAT FIELDS IT HOLD'S!
+
+    // 3) CALL CREATEMESSAGEFUNC() AND SAVE TO DB
+
+    return;
+  } catch (err) {
+    console.error("processInboundWebhookService error:", err);
+    return;
+  }
+};
+
+// CREATE AND SAVE INGESTED NORMALIZED PAYLOADS TO DB
 async function createMessage(normalizedData) {
   return await MessageModel.create({
     sourceType: normalizedData.sourceType,

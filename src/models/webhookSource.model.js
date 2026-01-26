@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const relayEmailSchema = new mongoose.Schema(
+const webhookSourceSchema = new mongoose.Schema(
   {
     // ─────────────────────────────
     // INPUT OWNERSHIP
@@ -9,47 +9,34 @@ const relayEmailSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
       required: true,
-      unique: true, // V1: one input source per project
+      unique: true, // V1: one webhook per project
       index: true,
     },
-
-    // Full inbound email
-    address: {
+    provider: {
+      type: String,
+      enum: ["webflow", "framer", "custom"],
+      required: true,
+      index: true,
+    },
+    // Used to identify incoming webhook
+    identifier: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
-      trim: true,
-    },
-
-    // Routing identifier
-    localPart: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
       index: true,
+      // webflow → siteId
+      // framer/custom → token
     },
-
-    domain: {
+    // Only for providers that support signing (Webflow)
+    secret: {
       type: String,
-      required: true,
-      default: "in.samiran.studio",
+      select: false,
     },
-
-    label: {
-      type: String,
-      trim: true,
-      maxlength: 50,
-    },
-
     status: {
       type: String,
       enum: ["ACTIVE", "DISABLED"],
       default: "ACTIVE",
     },
-
     deletedAt: {
       type: Date,
       default: null,
@@ -58,5 +45,5 @@ const relayEmailSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const RelayEmailModel = mongoose.model("RelayEmail", relayEmailSchema);
-module.exports = RelayEmailModel;
+const WebhookSourceModel = mongoose.model("WebhookSource", webhookSourceSchema);
+module.exports = WebhookSourceModel;

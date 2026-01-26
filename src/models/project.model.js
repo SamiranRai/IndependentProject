@@ -27,6 +27,19 @@ const projectSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    output: {
+      type: {
+        type: String,
+        enum: ["email"], // later -> Integration
+        default: "email",
+      },
+
+      email: {
+        type: String,
+        lowercase: true,
+        trim: true,
+      },
+    },
     deletedAt: {
       type: Date,
       default: null,
@@ -37,5 +50,5 @@ const projectSchema = new mongoose.Schema(
   }
 );
 
-const ProjectModel = mongoose.model('Project', projectSchema);
+const ProjectModel = mongoose.model("Project", projectSchema);
 module.exports = ProjectModel;
