@@ -1,50 +1,42 @@
+const AppError = require("../middlewares/AppError");
 const catchAsync = require("../middlewares/catchAsync");
+const WebhookSourceModel = require("../models/webhookSource.model");
 const inboundService = require("../services/inbound.service");
+const verifyWebflowSignature = require("../utils/verifyWebflowSignature");
 
-// INBOUND EMAIL CONTROLLER
-exports.inboundEmailWebhook = catchAsync(async (req, res, next) => {
+// CONTROLLER: INBOUND EMAIL CONTROLLER
+exports.inboundEmail = catchAsync(async (req, res, next) => {
   // MAILGUN SEND THE PAYLOAD
   const payload = req.body;
 
-  // CALL THE SERVICE
   await inboundService.processInboundEmailService(payload);
-  // SEND 200 CLEAN RESPONSE
   res.status(200).send("OK");
 });
 
-// @RESTORE_LATER: restore it later, Webflow Wehook.
-// exports.inboundWebflowWebhook = catchAsync(async (req, res, next) => {
-//   // EXTRACT WEBFLOW SIGNATURE, TIMESTAMP , & RAW BODY
-//   const timestamp = req.headers["x-webflow-signature"];
-//   const signatur = req.headers["x-webflow-timestamp"];
-//   const rawBody = req.rawBody;
+//webhookUrl: /api/v1/inbound/webhook/${identifier}, --type=webflow,framer,custom
+// CONTROLLER: INBOUND WEBHOOK CONTROLLER
+exports.inboundWebhook = catchAsync(async (req, res, next) => {
+  const { identifier } = req.params;
 
-//   // VERIFY SIGNATURE FUNC
-  
-//   // CALL INBOUND_WEBHOOK_SERVICE
-//   await inboundService.processInboundWebhookService({
-//     provider: "webflow",
-//     payload,
-//   });
+  // FIND THE WEBHOOK OWNER
+  const source = await WebhookSourceModel.findOne({
+    identifier,
+    status: "ACTIVE",
+    deletedAt: null,
+  }).select("+secret");
 
-//   // SEND BACK RESPONSW
-//   res.status(200).send("OK");
-// });
+  if (!source) {
+    return res.status(404).end();
+  }
 
-exports.inboundFramerWebhook = catchAsync(async (req, res, next) => {
-  console.log({
-    headers: req.headers,
-    payload: req.body
-  });
+  // EXPLICIT CHECK FOR WEBFLOW
+  if (source.provider === "webflow") {
+    // VALIDATE THE WEBFLOW REQ
+    verifyWebflowSignature(req, source.secret);
+  }
 
-  // VERIFY SIGNATURE FUNC
-  
-  // CALL INBOUND_WEBHOOK_SERVICE
-  // await inboundService.processInboundWebhookService({
-  //   provider: "framer",
-  //   payload,
-  // });
+  res.status(200).json({ ok: true });
 
-  // SEND BACK RESPONSW
-  res.status(200).send("OK");
+  // CALL AFTER TO PREVENT FROM WEBFLOW REQ. AGAIN
+  await inboundService.processInboundWebhookService(req.body, source);
 });

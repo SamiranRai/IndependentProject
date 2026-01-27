@@ -3,9 +3,8 @@ const router = express.Router();
 
 const inboundController = require('../controllers/inbound.controller');
 
-router.post('/email', inboundController.inboundEmailWebhook);
-router.post('/webhook', inboundController.inboundFramerWebhook);
-// @ACTIVATE_ROUTE: activate route for the webflow webhook
-// router.post('/webhook', inboundController.inboundWebflowWebhook);
+//webhookUrl: /api/v1/inbound/webhook/${identifier},
+router.post('/webhook/:identifier', inboundController.inboundWebhook);
+router.post('/email', inboundController.inboundEmail);
 
 module.exports = router;
