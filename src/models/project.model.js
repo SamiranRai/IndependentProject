@@ -10,35 +10,39 @@ const projectSchema = new mongoose.Schema(
     name: {
       type: String,
       trim: true,
-      required: [true, "Project name must!"],
+      required: [true, "Project name is required"],
       maxLength: 100,
     },
+    
     description: {
       type: String,
       trim: true,
       maxlength: 500,
     },
-    status: {
+    runTimeStatus: {
       type: String,
-      enum: ["onboarding", "active", "deleted"],
-      default: "onboarding",
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
+      enum: ["enabled", "paused"],
+      default: "enabled",
     },
     output: {
-      type: {
-        type: String,
-        enum: ["email"], // later -> Integration
-        default: "email",
+      type: { type: String, enum: ["email"], default: "email" },
+      config: {
+        email: {
+          type: String,
+          lowercase: true,
+          trim: true,
+        },
+        label: String,
       },
-
-      email: {
+    },
+    setup: {
+      inputProvider: {
         type: String,
-        lowercase: true,
-        trim: true,
+        enum: ["webflow", "framer"]
       },
+      providerConfigured: Boolean,
+      destinationConfigured: Boolean,
+      completedAt: Date
     },
     deletedAt: {
       type: Date,

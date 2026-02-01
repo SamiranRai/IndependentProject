@@ -2,40 +2,41 @@ const mongoose = require("mongoose");
 
 const webhookSourceSchema = new mongoose.Schema(
   {
-    // ─────────────────────────────
-    // INPUT OWNERSHIP
-    // ─────────────────────────────
     projectId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
       required: true,
-      unique: true, // V1: one webhook per project
+      unique: true,
       index: true,
     },
     provider: {
       type: String,
-      enum: ["webflow", "framer", "custom"],
+      enum: ["webflow", "framer"],
       required: true,
       index: true,
     },
-    // Used to identify incoming webhook
     identifier: {
       type: String,
       required: true,
       unique: true,
       index: true,
-      // webflow → siteId
-      // framer/custom → token
     },
-    // Only for providers that support signing (Webflow)
     secret: {
       type: String,
       select: false,
     },
+    endPoint: {
+      type: String,
+      required: true,
+    },
     status: {
       type: String,
-      enum: ["ACTIVE", "DISABLED"],
-      default: "ACTIVE",
+      enum: ["unconfigured", "active", "disabled"],
+      default: "unconfigured",
+    },
+    lastRecivedAt: {
+      type: Date,
+      default: null,
     },
     deletedAt: {
       type: Date,
