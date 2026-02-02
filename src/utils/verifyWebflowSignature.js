@@ -1,14 +1,10 @@
 const crypto = require("crypto");
-const AppError = require("./../middlewares/AppError");
 
-module.exports = function verifyWebflowSignature(req, webflowSecretKey) {
-  const signature =
-    req.headers["x-webflow-signature"] || req.headers["x-webflow-Signature"];
-  const timestamp =
-    req.headers["x-webflow-timestamp"] || req.headers["x-webflow-Timestamp"];
-
+function verifyWebflowSignature(req, webflowSecretKey) {
+  const signature = req.headers["x-webflow-signature"];
+  const timestamp = req.headers["x-webflow-timestamp"];
   if (!signature || !timestamp) {
-    throw new AppError("Missing Webflow signature headers", 401);
+    return false;
   }
 
   const bodyString = req.rawBody.toString("utf8");
@@ -19,15 +15,16 @@ module.exports = function verifyWebflowSignature(req, webflowSecretKey) {
     .update(payload)
     .digest("hex");
 
-  const isValid = crypto.timingSafeEqual(
-    Buffer.from(expected, "hex"),
-    Buffer.from(signature, "hex")
-  );
-
-  // @ADD_TIME_PROTECTION: add timestamp to protect agains replay attack!
-  if (!isValid) {
-    throw new AppError("Invalid Webflow signature", 401);
+  try {
+    crypto.timingSafeEqual(
+      Buffer.from(expected, "hex"),
+      Buffer.from(signature, "hex")
+    );
+    return true;
+  } catch (err) {
+    console.error("Invalid Webflow Signature", err);
+    return false;
   }
+}
 
-  console.log("Webflow Signature Verification Successfull..");
-};
+module.exports = verifyWebflowSignature;
