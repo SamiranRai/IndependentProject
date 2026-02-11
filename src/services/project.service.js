@@ -192,6 +192,11 @@ exports.addDestinaonEmailService = async (body, userId, projectId) => {
     },
   };
 
+  project.setup.providerConfigured =
+    project.setup.inputProvider === "framer"
+      ? true
+      : project.setup.providerConfigured;
+
   project.setup.destinationConfigured = true;
   project.setup.completedAt = new Date();
   await project.save();
