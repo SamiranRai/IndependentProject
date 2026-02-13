@@ -16,11 +16,10 @@ function verifyWebflowSignature(req, webflowSecretKey) {
     .digest("hex");
 
   try {
-    crypto.timingSafeEqual(
+    return crypto.timingSafeEqual(
       Buffer.from(expected, "hex"),
       Buffer.from(signature, "hex")
     );
-    return true;
   } catch (err) {
     console.error("Invalid Webflow Signature", err);
     return false;
