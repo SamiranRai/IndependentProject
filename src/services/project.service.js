@@ -4,6 +4,7 @@ const UserModel = require("../models/user.model");
 const WebhookSourceModel = require("../models/webhookSource.model");
 const { deriveProjectSetupState } = require("../utils/projectState");
 const { createWebhookSource } = require("./webhook.service");
+const { validateObjectId } = require("../utils/validateObjectId");
 
 // SERVICE: CREATE PROJECT SERVICE
 exports.createProjectService = async (body, userId) => {
@@ -247,3 +248,80 @@ exports.addDestinaonEmailService = async (body, userId, projectId) => {
     setupState: deriveProjectSetupState(project.setup),
   };
 };
+
+// SERVICE: UPDATE A PROJECT
+exports.updateProjectService = async (body, userId, projectId) => {
+  if (!userId) {
+    throw new AppError("Authentication required", 401, "AUTH_REQUIRED");
+  }
+
+  validateObjectId(projectId, "Project");
+
+  const allowedFields = [
+    "name",
+    "description",
+    "setup",
+    "output",
+    "runTimeStatus",
+  ];
+
+  const filteredFields = {};
+
+  for (const key of allowedFields) {
+    if (body[key] !== undefined) {
+      filteredFields[key] = body[key];
+    }
+  }
+
+  if (Object.keys(filteredFields).length === 0) {
+    throw new AppError("No valid fields to update", 400, "NO_VALID_FIELDS");
+  }
+
+  if (
+    filteredFields.runTimeStatus &&
+    !["enabled", "paused"].includes(filteredFields.runTimeStatus)
+  ) {
+    throw new AppError("Invalid status", 400, "INVALID_STATUS");
+  }
+
+  const project = await ProjectModel.findOneAndUpdate(
+    { _id: projectId, userId, deletedAt: null },
+    { $set: filteredFields },
+    { new: true, runValidators: true }
+  );
+
+  if (!project) {
+    throw new AppError("Project not found", 404, "PROJECT_NOT_FOUND");
+  }
+
+  return project;
+};
+
+exports.deleteProjectService = async (userId, projectId) => {
+  if (!userId) {
+    throw new AppError("Authentication required", 401, "AUTH_REQUIRED");
+  }
+
+  validateObjectId(projectId, "Project");
+
+  const project = await ProjectModel.findOneAndUpdate(
+    {
+      _id: projectId,
+      userId,
+      deletedAt: null,
+    },
+    {
+      $set: { deletedAt: new Date(), runTimeStatus: "paused" },
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!project) {
+    throw new AppError("Project not found", 404, "PROJECT_NOT_FOUND");
+  }
+
+  return;
+};
+
