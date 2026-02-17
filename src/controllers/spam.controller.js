@@ -70,3 +70,22 @@ exports.getSpamMessageDetail = catchAsync(async (req, res, next) => {
     data: result,
   });
 });
+
+// CONTROLLER: USER OVERRIDE (MARK MESSAGE AS NOT SPAM)
+exports.overrideSpamMessage = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const { projectId, messageId } = req.params;
+
+  const result = await spamService.overrideSpamMessageService(
+    userId,
+    projectId,
+    messageId
+  );
+
+  res.status(200).json({
+    success: true,
+    code: "SPAM_MESSAGE_OVERRIDDEN",
+    message: "Message marked as not spam and queued for delivery",
+    data: result,
+  });
+});

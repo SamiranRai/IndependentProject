@@ -177,8 +177,7 @@ exports.getSpamMessageDetailService = async (userId, projectId, messageId) => {
     projectId,
     handling: "blocked",
     deletedAt: null,
-  })
-    .lean();
+  }).lean();
 
   if (!message) {
     throw new AppError("Spam message not found", 404, "MESSAGE_NOT_FOUND");
@@ -196,8 +195,84 @@ exports.getSpamMessageDetailService = async (userId, projectId, messageId) => {
     provider: message.provider,
     classification: message.classification,
     decisionSource: message.decisionSource,
+    userOverride: message.userOverride || false,
+    deliveryStatus: message.deliveryStatus,
     receivedAt: message.receivedAt,
     createdAt: message.createdAt,
+  };
+};
+
+// SERVICE: USER OVERRIDE (MARK MESSAGE AS NOT SPAM)
+exports.overrideSpamMessageService = async (userId, projectId, messageId) => {
+  if (!userId) {
+    throw new AppError("Authentication required", 401, "AUTH_REQUIRED");
+  }
+  validateObjectId(projectId, "Project");
+  validateObjectId(messageId, "Message");
+
+  const project = await ProjectModel.findOne({
+    _id: projectId,
+    userId,
+    deletedAt: null,
+  });
+  if (!project) {
+    throw new AppError("Project not found", 404, "PROJECT_NOT_FOUND");
+  }
+
+  const message = await MessageModel.findOne({
+    _id: messageId,
+    projectId,
+    deletedAt: null,
+  });
+
+  if (!message) {
+    throw new AppError("Message not found", 404, "MESSAGE_NOT_FOUND");
+  }
+
+  if (message.userOverride) {
+    throw new AppError(
+      "Message has already been overridden",
+      409,
+      "MESSAGE_ALREADY_OVERRIDDEN"
+    );
+  }
+
+  if (message.handling !== "blocked") {
+    throw new AppError(
+      "Only blocked messages can be overridden",
+      409,
+      "MESSAGE_NOT_BLOCKED"
+    );
+  }
+
+  if (message.deliveryStatus === "delivered") {
+    throw new AppError(
+      "Delivered messages cannot be overridden",
+      409,
+      "MESSAGE_ALREADY_DELIVERED"
+    );
+  }
+
+  // Record user override and queue for delivery
+  message.userOverride = true;
+  message.overriddenAt = new Date();
+  message.overriddenBy = userId;
+  message.handling = "forwarded";
+  message.deliveryStatus = "pending";
+  message.processing = false;
+
+  await message.save();
+
+  return {
+    id: message._id,
+    email: extractSenderEmail(message),
+    spamReason: message.reason || "No reason provided",
+    score: message.confidenceScore ?? null,
+    scoreDisplay: formatScoreDisplay(message.confidenceScore),
+    date: message.receivedAt,
+    isHighConfidence: (message.confidenceScore ?? 0) >= 80,
+    userOverride: message.userOverride,
+    deliveryStatus: message.deliveryStatus,
   };
 };
 

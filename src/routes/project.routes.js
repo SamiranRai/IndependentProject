@@ -21,6 +21,10 @@ router
   .get(spamController.getSpamMessageDetail);
 
 router
+  .route("/:projectId/spam/:messageId/override")
+  .patch(spamController.overrideSpamMessage);
+
+router
   .route("/:projectId/spam")
   .get(spamController.getSpamBox)
   .delete(spamController.clearSpamHistory);
