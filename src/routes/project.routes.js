@@ -2,18 +2,32 @@ const express = require("express");
 const router = express.Router();
 
 const projectController = require("../controllers/project.controller");
+const spamController = require("../controllers/spam.controller");
 const authController = require("../controllers/auth.controller");
 
 router.use(authController.protect);
 
-router.post("/", projectController.createProject);
-router.post("/:projectId/input", projectController.selectInputProvider);
-router.post(
-  "/:projectId/input/configure",
-  projectController.saveWebflowSecretKey
-);
+router.route("/").post(projectController.createProject);
+router.route("/:projectId/input").post(projectController.selectInputProvider);
+router
+  .route("/:projectId/input/configure")
+  .post(projectController.saveWebflowSecretKey);
+router
+  .route("/:projectId/destination")
+  .post(projectController.addDestinationEmail);
 
-// ONBOARDING (write-once)
-router.post("/:projectId/destination", projectController.addDestinationEmail);
+router
+  .route("/:projectId/spam/:messageId")
+  .get(spamController.getSpamMessageDetail);
+
+router
+  .route("/:projectId/spam")
+  .get(spamController.getSpamBox)
+  .delete(spamController.clearSpamHistory);
+
+router
+  .route("/:projectId")
+  .patch(projectController.updateProject)
+  .delete(projectController.deleteProject);
 
 module.exports = router;
