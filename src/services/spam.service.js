@@ -155,6 +155,44 @@ exports.clearSpamHistoryService = async (userId, projectId, range = DEFAULT_RANG
   return { deletedCount: result.modifiedCount };
 };
 
+// SERVICE: DELETE A SINGLE SPAM MESSAGE
+exports.deleteSpamMessageService = async (userId, projectId, messageId) => {
+  if (!userId) {
+    throw new AppError("Authentication required", 401, "AUTH_REQUIRED");
+  }
+  validateObjectId(projectId, "Project");
+  validateObjectId(messageId, "Message");
+
+  const project = await ProjectModel.findOne({
+    _id: projectId,
+    userId,
+    deletedAt: null,
+  });
+  if (!project) {
+    throw new AppError("Project not found", 404, "PROJECT_NOT_FOUND");
+  }
+
+  const message = await MessageModel.findOneAndUpdate(
+    {
+      _id: messageId,
+      projectId,
+      deletedAt: null,
+    },
+    {
+      $set: { deletedAt: new Date() },
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!message) {
+    throw new AppError("Message not found", 404, "MESSAGE_NOT_FOUND");
+  }
+
+  return { id: message._id, deletedAt: message.deletedAt };
+};
+
 // SERVICE: GET FULL DETAIL OF A SINGLE SPAM MESSAGE (FOR MODAL VIEW)
 exports.getSpamMessageDetailService = async (userId, projectId, messageId) => {
   if (!userId) {

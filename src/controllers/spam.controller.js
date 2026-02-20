@@ -89,3 +89,22 @@ exports.overrideSpamMessage = catchAsync(async (req, res, next) => {
     data: result,
   });
 });
+
+// CONTROLLER: DELETE A SINGLE SPAM MESSAGE
+exports.deleteSpamMessage = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+  const { projectId, messageId } = req.params;
+
+  const result = await spamService.deleteSpamMessageService(
+    userId,
+    projectId,
+    messageId
+  );
+
+  res.status(200).json({
+    success: true,
+    code: "SPAM_MESSAGE_DELETED",
+    message: "Spam message deleted successfully",
+    data: result,
+  });
+});

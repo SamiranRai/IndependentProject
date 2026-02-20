@@ -18,7 +18,8 @@ router
 
 router
   .route("/:projectId/spam/:messageId")
-  .get(spamController.getSpamMessageDetail);
+  .get(spamController.getSpamMessageDetail)
+  .delete(spamController.deleteSpamMessage);
 
 router
   .route("/:projectId/spam/:messageId/override")
